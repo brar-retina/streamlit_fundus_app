@@ -24,7 +24,17 @@ if 'app_state' not in st.session_state:
         'fill_type': 'none',
         'opacity': 0.7,
         'line_width': 2,
-        'current_eye': None
+        'current_eye': None,
+        'patient_name': '',
+        'patient_age': '',
+        'diagnosis': '',
+        'diagnosis_other': '',
+        'left_eye': '',
+        'right_eye': '',
+        'va_left': '',
+        'va_right': '',
+        'iop_left': '',
+        'iop_right': ''
     }
 
 def main():
@@ -38,9 +48,14 @@ def main():
     with st.sidebar:
         st.header("Patient Information")
         
-        patient_id = st.text_input("Patient ID")
-        patient_name = st.text_input("Patient Name")
-        patient_age = st.text_input("Age")
+        patient_id = st.text_input("Patient ID", value=st.session_state.app_state['current_patient'] or "")
+        st.session_state.app_state['current_patient'] = patient_id
+        
+        patient_name = st.text_input("Patient Name", value=st.session_state.app_state['patient_name'])
+        st.session_state.app_state['patient_name'] = patient_name
+        
+        patient_age = st.text_input("Age", value=st.session_state.app_state['patient_age'])
+        st.session_state.app_state['patient_age'] = patient_age
         
         diagnosis = st.selectbox("Diagnosis", [
             "Diabetic Retinopathy",
@@ -49,21 +64,31 @@ def main():
             "Glaucoma",
             "Retinitis Pigmentosa",
             "Other"
-        ])
+        ], index=["Diabetic Retinopathy", "Age-related Macular Degeneration", "Retinal Detachment", 
+                  "Glaucoma", "Retinitis Pigmentosa", "Other"].index(st.session_state.app_state['diagnosis']) if st.session_state.app_state['diagnosis'] else 0)
+        st.session_state.app_state['diagnosis'] = diagnosis
         
-        diagnosis_other = st.text_input("Specify Other Diagnosis") if diagnosis == "Other" else ""
+        diagnosis_other = st.text_input("Specify Other Diagnosis", value=st.session_state.app_state['diagnosis_other']) if diagnosis == "Other" else ""
+        st.session_state.app_state['diagnosis_other'] = diagnosis_other
         
         st.subheader("Retinal Findings")
-        right_eye = st.text_input("Right Eye")
-        left_eye = st.text_input("Left Eye")
+        right_eye = st.text_input("Right Eye", value=st.session_state.app_state['right_eye'])
+        st.session_state.app_state['right_eye'] = right_eye
+        
+        left_eye = st.text_input("Left Eye", value=st.session_state.app_state['left_eye'])
+        st.session_state.app_state['left_eye'] = left_eye
         
         col1, col2 = st.columns(2)
         with col1:
-            va_right = st.text_input("VA Right")
-            iop_right = st.text_input("IOP Right (mmHg)")
+            va_right = st.text_input("VA Right", value=st.session_state.app_state['va_right'])
+            st.session_state.app_state['va_right'] = va_right
+            iop_right = st.text_input("IOP Right (mmHg)", value=st.session_state.app_state['iop_right'])
+            st.session_state.app_state['iop_right'] = iop_right
         with col2:
-            va_left = st.text_input("VA Left")
-            iop_left = st.text_input("IOP Left (mmHg)")
+            va_left = st.text_input("VA Left", value=st.session_state.app_state['va_left'])
+            st.session_state.app_state['va_left'] = va_left
+            iop_left = st.text_input("IOP Left (mmHg)", value=st.session_state.app_state['iop_left'])
+            st.session_state.app_state['iop_left'] = iop_left
 
         # Patient management buttons
         if st.button("Load Patient"):
@@ -72,6 +97,16 @@ def main():
                 if patient_data:
                     st.session_state.app_state.update({
                         'current_patient': patient_id,
+                        'patient_name': patient_data.get("name", ""),
+                        'patient_age': patient_data.get("age", ""),
+                        'diagnosis': patient_data.get("diagnosis", ""),
+                        'diagnosis_other': patient_data.get("diagnosis_other", ""),
+                        'left_eye': patient_data.get("left_eye", ""),
+                        'right_eye': patient_data.get("right_eye", ""),
+                        'va_left': patient_data.get("va_left", ""),
+                        'va_right': patient_data.get("va_right", ""),
+                        'iop_left': patient_data.get("iop_left", ""),
+                        'iop_right': patient_data.get("iop_right", ""),
                         'left_drawings': patient_data.get("left_drawings", []),
                         'right_drawings': patient_data.get("right_drawings", []),
                         'legend_data': patient_data.get("legend_data", [])
@@ -79,21 +114,23 @@ def main():
                     st.success(f"Loaded patient {patient_id}")
                 else:
                     st.error("Patient not found")
+            else:
+                st.error("Please enter a Patient ID")
         
         if st.button("Save Patient"):
             if patient_id:
                 patient_data = {
                     "id": patient_id,
-                    "name": patient_name,
-                    "age": patient_age,
-                    "diagnosis": diagnosis,
-                    "diagnosis_other": diagnosis_other,
-                    "left_eye": left_eye,
-                    "right_eye": right_eye,
-                    "va_right": va_right,
-                    "va_left": va_left,
-                    "iop_right": iop_right,
-                    "iop_left": iop_left,
+                    "name": st.session_state.app_state['patient_name'],
+                    "age": st.session_state.app_state['patient_age'],
+                    "diagnosis": st.session_state.app_state['diagnosis'],
+                    "diagnosis_other": st.session_state.app_state['diagnosis_other'],
+                    "left_eye": st.session_state.app_state['left_eye'],
+                    "right_eye": st.session_state.app_state['right_eye'],
+                    "va_right": st.session_state.app_state['va_right'],
+                    "va_left": st.session_state.app_state['va_left'],
+                    "iop_right": st.session_state.app_state['iop_right'],
+                    "iop_left": st.session_state.app_state['iop_left'],
                     "left_drawings": st.session_state.app_state['left_drawings'],
                     "right_drawings": st.session_state.app_state['right_drawings'],
                     "legend_data": st.session_state.app_state['legend_data'],
@@ -102,10 +139,22 @@ def main():
                 data_manager.save_complete_patient_record(patient_id, patient_data)
                 st.session_state.app_state['current_patient'] = patient_id
                 st.success(f"Saved patient {patient_id}")
+            else:
+                st.error("Please enter a Patient ID")
 
         if st.button("New Patient"):
             st.session_state.app_state.update({
                 'current_patient': None,
+                'patient_name': '',
+                'patient_age': '',
+                'diagnosis': '',
+                'diagnosis_other': '',
+                'left_eye': '',
+                'right_eye': '',
+                'va_left': '',
+                'va_right': '',
+                'iop_left': '',
+                'iop_right': '',
                 'left_drawings': [],
                 'right_drawings': [],
                 'legend_data': [],
@@ -119,28 +168,38 @@ def main():
     
     with col1:
         st.subheader("Drawing Tools")
-        edit_mode = st.radio("Mode", ["Draw", "Transform", "Delete"])
+        edit_mode = st.radio("Mode", ["Draw", "Transform", "Delete"], horizontal=True)
         st.session_state.app_state['editing_mode'] = edit_mode.lower()
         
-        drawing_tool = st.selectbox("Tool", ["Line", "Rectangle", "Freehand", "Polygon"])
+        drawing_tool = st.selectbox("Tool", ["Line", "Rectangle", "Circle", "Dot", "Freehand", "Polygon"], format_func=lambda x: x, label_visibility="collapsed")
         st.session_state.app_state['drawing_mode'] = drawing_tool.lower()
         
-        color = st.selectbox("Color", ["red", "green", "blue", "yellow", "black", "purple", "orange", "brown"])
+        color = st.selectbox("Color", ["red", "green", "blue", "yellow", "black", "purple", "orange", "brown"], format_func=lambda x: x, label_visibility="collapsed")
         st.session_state.app_state['drawing_color'] = color
         
-        fill_type = st.selectbox("Fill", ["none", "solid"])
+        fill_type = st.selectbox("Fill", ["none", "solid"], format_func=lambda x: x, label_visibility="collapsed")
         st.session_state.app_state['fill_type'] = fill_type
         
-        opacity = st.slider("Opacity", 0.1, 1.0, 0.7)
+        opacity = st.slider("Opacity", 0.1, 1.0, 0.7, format="%.1f", label_visibility="collapsed")
         st.session_state.app_state['opacity'] = opacity
         
-        line_width = st.slider("Width", 1, 10, 2)
+        line_width = st.slider("Width", 1, 10, 2, label_visibility="collapsed")
         st.session_state.app_state['line_width'] = line_width
 
         # Generate base chart
-        fig = generate_base_chart(patient_name, patient_id, patient_age, diagnosis, 
-                                diagnosis_other, left_eye, right_eye, va_left, 
-                                va_right, iop_left, iop_right)
+        fig = generate_base_chart(
+            st.session_state.app_state['patient_name'],
+            st.session_state.app_state['current_patient'],
+            st.session_state.app_state['patient_age'],
+            st.session_state.app_state['diagnosis'],
+            st.session_state.app_state['diagnosis_other'],
+            st.session_state.app_state['left_eye'],
+            st.session_state.app_state['right_eye'],
+            st.session_state.app_state['va_left'],
+            st.session_state.app_state['va_right'],
+            st.session_state.app_state['iop_left'],
+            st.session_state.app_state['iop_right']
+        )
         
         # Convert Matplotlib figure to image for canvas background
         buf = io.BytesIO()
@@ -148,10 +207,8 @@ def main():
         buf.seek(0)
         img = Image.open(buf)
         
-        # Canvas for drawing - split into left and right eye
-        st.write("Right Eye (O.D.) | Left Eye (O.S.)")
-        canvas_width = 800
-        canvas_height = 400
+        # Display canvases side by side
+        col_right, col_left = st.columns(2)
         
         # Prepare drawing settings
         stroke_color = st.session_state.app_state['drawing_color']
@@ -165,34 +222,43 @@ def main():
             drawing_mode = "line"
         elif drawing_mode == "rectangle":
             drawing_mode = "rect"
+        elif drawing_mode == "circle":
+            drawing_mode = "circle"
+        elif drawing_mode == "dot":
+            drawing_mode = "point"
 
-        # Right Eye Canvas
-        right_canvas_result = st_canvas(
-            fill_color=f"rgba({','.join(map(str, Image.new('RGB', (1,1), stroke_color).getpixel((0,0))))},{opacity})" if fill_type == "solid" else "rgba(0,0,0,0)",
-            stroke_width=stroke_width,
-            stroke_color=stroke_color,
-            background_image=img,
-            update_streamlit=True,
-            height=canvas_height,
-            width=canvas_width // 2,
-            drawing_mode=drawing_mode if edit_mode == "Draw" else "transform",
-            key="right_canvas",
-            display_toolbar=True,
-        )
+        canvas_width = 400  # Reduced width for side-by-side display
+        canvas_height = 400
+        
+        with col_right:
+            st.write("Right Eye (O.D.)")
+            right_canvas_result = st_canvas(
+                fill_color=f"rgba({','.join(map(str, Image.new('RGB', (1,1), stroke_color).getpixel((0,0))))},{opacity})" if fill_type == "solid" else "rgba(0,0,0,0)",
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                background_image=img,
+                update_streamlit=True,
+                height=canvas_height,
+                width=canvas_width,
+                drawing_mode=drawing_mode if edit_mode == "Draw" else "transform",
+                key="right_canvas",
+                display_toolbar=True,
+            )
 
-        # Left Eye Canvas
-        left_canvas_result = st_canvas(
-            fill_color=f"rgba({','.join(map(str, Image.new('RGB', (1,1), stroke_color).getpixel((0,0))))},{opacity})" if fill_type == "solid" else "rgba(0,0,0,0)",
-            stroke_width=stroke_width,
-            stroke_color=stroke_color,
-            background_image=img,
-            update_streamlit=True,
-            height=canvas_height,
-            width=canvas_width // 2,
-            drawing_mode=drawing_mode if edit_mode == "Draw" else "transform",
-            key="left_canvas",
-            display_toolbar=True,
-        )
+        with col_left:
+            st.write("Left Eye (O.S.)")
+            left_canvas_result = st_canvas(
+                fill_color=f"rgba({','.join(map(str, Image.new('RGB', (1,1), stroke_color).getpixel((0,0))))},{opacity})" if fill_type == "solid" else "rgba(0,0,0,0)",
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                background_image=img,
+                update_streamlit=True,
+                height=canvas_height,
+                width=canvas_width,
+                drawing_mode=drawing_mode if edit_mode == "Draw" else "transform",
+                key="left_canvas",
+                display_toolbar=True,
+            )
 
         # Process canvas drawings
         if right_canvas_result.json_data:
@@ -268,7 +334,7 @@ def process_canvas_data(canvas_data, eye):
     drawings.clear()
     
     for obj in objects:
-        if obj["type"] in ["path", "rect", "line"]:
+        if obj["type"] in ["path", "rect", "line", "circle", "point"]:
             color = f"#{obj['stroke'][1:]}" if obj['stroke'].startswith('#') else obj['stroke']
             drawing_data = {
                 "type": obj["type"],
@@ -285,6 +351,12 @@ def process_canvas_data(canvas_data, eye):
                 drawing_data["fill"] = "solid" if obj["fill"] != "transparent" else "none"
             elif obj["type"] == "line":
                 drawing_data["coords"] = ((obj["x1"], obj["y1"]), (obj["x2"], obj["y2"]))
+            elif obj["type"] == "circle":
+                drawing_data["coords"] = ((obj["left"] + obj["radius"], obj["top"] + obj["radius"]), obj["radius"])
+                drawing_data["fill"] = "solid" if obj["fill"] != "transparent" else "none"
+            elif obj["type"] == "point":
+                drawing_data["coords"] = (obj["left"], obj["top"])
+                drawing_data["radius"] = 5  # Fixed size for dot
             
             drawings.append(drawing_data)
 
@@ -306,17 +378,17 @@ def save_chart(data_manager, patient_id):
         return
     
     fig = generate_base_chart(
-        st.session_state.app_state.get('patient_name', ''),
+        st.session_state.app_state['patient_name'],
         patient_id,
-        st.session_state.app_state.get('patient_age', ''),
-        st.session_state.app_state.get('diagnosis', ''),
-        st.session_state.app_state.get('diagnosis_other', ''),
-        st.session_state.app_state.get('left_eye', ''),
-        st.session_state.app_state.get('right_eye', ''),
-        st.session_state.app_state.get('va_left', ''),
-        st.session_state.app_state.get('va_right', ''),
-        st.session_state.app_state.get('iop_left', ''),
-        st.session_state.app_state.get('iop_right', '')
+        st.session_state.app_state['patient_age'],
+        st.session_state.app_state['diagnosis'],
+        st.session_state.app_state['diagnosis_other'],
+        st.session_state.app_state['left_eye'],
+        st.session_state.app_state['right_eye'],
+        st.session_state.app_state['va_left'],
+        st.session_state.app_state['va_right'],
+        st.session_state.app_state['iop_left'],
+        st.session_state.app_state['iop_right']
     )
     
     buf = io.BytesIO()
