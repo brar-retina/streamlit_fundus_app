@@ -9,10 +9,20 @@ import json
 from data_manager import DataManager
 import base64
 
-# Initialize session state
+# Initialize session state with default values
 if 'app_state' not in st.session_state:
     st.session_state.app_state = {
         'current_patient': None,
+        'patient_name': '',
+        'patient_age': '',
+        'diagnosis': '',
+        'diagnosis_other': '',
+        'left_eye': '',
+        'right_eye': '',
+        'va_left': '',
+        'va_right': '',
+        'iop_left': '',
+        'iop_right': '',
         'left_drawings': [],
         'right_drawings': [],
         'legend_data': [],
@@ -24,17 +34,7 @@ if 'app_state' not in st.session_state:
         'fill_type': 'none',
         'opacity': 0.7,
         'line_width': 2,
-        'current_eye': None,
-        'patient_name': '',
-        'patient_age': '',
-        'diagnosis': '',
-        'diagnosis_other': '',
-        'left_eye': '',
-        'right_eye': '',
-        'va_left': '',
-        'va_right': '',
-        'iop_left': '',
-        'iop_right': ''
+        'current_eye': None
     }
 
 def main():
@@ -48,13 +48,13 @@ def main():
     with st.sidebar:
         st.header("Patient Information")
         
-        patient_id = st.text_input("Patient ID", value=st.session_state.app_state['current_patient'] or "")
-        st.session_state.app_state['current_patient'] = patient_id
+        patient_id = st.text_input("Patient ID", value=st.session_state.app_state.get('current_patient', ''))
+        st.session_state.app_state['current_patient'] = patient_id if patient_id else st.session_state.app_state.get('current_patient', '')
         
-        patient_name = st.text_input("Patient Name", value=st.session_state.app_state['patient_name'])
+        patient_name = st.text_input("Patient Name", value=st.session_state.app_state.get('patient_name', ''))
         st.session_state.app_state['patient_name'] = patient_name
         
-        patient_age = st.text_input("Age", value=st.session_state.app_state['patient_age'])
+        patient_age = st.text_input("Age", value=st.session_state.app_state.get('patient_age', ''))
         st.session_state.app_state['patient_age'] = patient_age
         
         diagnosis = st.selectbox("Diagnosis", [
@@ -65,29 +65,29 @@ def main():
             "Retinitis Pigmentosa",
             "Other"
         ], index=["Diabetic Retinopathy", "Age-related Macular Degeneration", "Retinal Detachment", 
-                  "Glaucoma", "Retinitis Pigmentosa", "Other"].index(st.session_state.app_state['diagnosis']) if st.session_state.app_state['diagnosis'] else 0)
+                  "Glaucoma", "Retinitis Pigmentosa", "Other"].index(st.session_state.app_state.get('diagnosis', '')) if st.session_state.app_state.get('diagnosis', '') else 0)
         st.session_state.app_state['diagnosis'] = diagnosis
         
-        diagnosis_other = st.text_input("Specify Other Diagnosis", value=st.session_state.app_state['diagnosis_other']) if diagnosis == "Other" else ""
+        diagnosis_other = st.text_input("Specify Other Diagnosis", value=st.session_state.app_state.get('diagnosis_other', '')) if diagnosis == "Other" else ""
         st.session_state.app_state['diagnosis_other'] = diagnosis_other
         
         st.subheader("Retinal Findings")
-        right_eye = st.text_input("Right Eye", value=st.session_state.app_state['right_eye'])
+        right_eye = st.text_input("Right Eye", value=st.session_state.app_state.get('right_eye', ''))
         st.session_state.app_state['right_eye'] = right_eye
         
-        left_eye = st.text_input("Left Eye", value=st.session_state.app_state['left_eye'])
+        left_eye = st.text_input("Left Eye", value=st.session_state.app_state.get('left_eye', ''))
         st.session_state.app_state['left_eye'] = left_eye
         
         col1, col2 = st.columns(2)
         with col1:
-            va_right = st.text_input("VA Right", value=st.session_state.app_state['va_right'])
+            va_right = st.text_input("VA Right", value=st.session_state.app_state.get('va_right', ''))
             st.session_state.app_state['va_right'] = va_right
-            iop_right = st.text_input("IOP Right (mmHg)", value=st.session_state.app_state['iop_right'])
+            iop_right = st.text_input("IOP Right (mmHg)", value=st.session_state.app_state.get('iop_right', ''))
             st.session_state.app_state['iop_right'] = iop_right
         with col2:
-            va_left = st.text_input("VA Left", value=st.session_state.app_state['va_left'])
+            va_left = st.text_input("VA Left", value=st.session_state.app_state.get('va_left', ''))
             st.session_state.app_state['va_left'] = va_left
-            iop_left = st.text_input("IOP Left (mmHg)", value=st.session_state.app_state['iop_left'])
+            iop_left = st.text_input("IOP Left (mmHg)", value=st.session_state.app_state.get('iop_left', ''))
             st.session_state.app_state['iop_left'] = iop_left
 
         # Patient management buttons
@@ -171,19 +171,19 @@ def main():
         edit_mode = st.radio("Mode", ["Draw", "Transform", "Delete"], horizontal=True)
         st.session_state.app_state['editing_mode'] = edit_mode.lower()
         
-        drawing_tool = st.selectbox("Tool", ["Line", "Rectangle", "Circle", "Dot", "Freehand", "Polygon"], format_func=lambda x: x, label_visibility="collapsed")
+        drawing_tool = st.selectbox("Tool", ["Line", "Rectangle", "Circle", "Dot", "Freehand", "Polygon"], format_func=lambda x: x, label_visibility="collapsed", key="drawing_tool_select")
         st.session_state.app_state['drawing_mode'] = drawing_tool.lower()
         
-        color = st.selectbox("Color", ["red", "green", "blue", "yellow", "black", "purple", "orange", "brown"], format_func=lambda x: x, label_visibility="collapsed")
+        color = st.selectbox("Color", ["red", "green", "blue", "yellow", "black", "purple", "orange", "brown"], format_func=lambda x: x, label_visibility="collapsed", key="color_select")
         st.session_state.app_state['drawing_color'] = color
         
-        fill_type = st.selectbox("Fill", ["none", "solid"], format_func=lambda x: x, label_visibility="collapsed")
+        fill_type = st.selectbox("Fill", ["none", "solid"], format_func=lambda x: x, label_visibility="collapsed", key="fill_select")
         st.session_state.app_state['fill_type'] = fill_type
         
-        opacity = st.slider("Opacity", 0.1, 1.0, 0.7, format="%.1f", label_visibility="collapsed")
+        opacity = st.slider("Opacity", 0.1, 1.0, 0.7, format="%.1f", label_visibility="collapsed", key="opacity_slider")
         st.session_state.app_state['opacity'] = opacity
         
-        line_width = st.slider("Width", 1, 10, 2, label_visibility="collapsed")
+        line_width = st.slider("Width", 1, 10, 2, label_visibility="collapsed", key="width_slider")
         st.session_state.app_state['line_width'] = line_width
 
         # Generate base chart
@@ -309,19 +309,40 @@ def generate_base_chart(name, pid, age, diagnosis, diagnosis_other, left_eye, ri
 
 def draw_eye_chart(ax, title, findings, va, iop):
     ax.clear()
-    for r in [1.0, 0.8, 0.6]:
-        ax.add_patch(plt.Circle((0, 0), r, fill=False, color='black'))
     
+    # Draw the concentric circles
+    outer_circle = plt.Circle((0, 0), 1.0, fill=False, color='black')
+    middle_circle = plt.Circle((0, 0), 0.8, fill=False, color='black')
+    inner_circle = plt.Circle((0, 0), 0.6, fill=False, color='black')
+    ax.add_patch(outer_circle)
+    ax.add_patch(middle_circle)
+    ax.add_patch(inner_circle)
+    
+    # Draw clock hour markings AND radial lines
     for hour in range(1, 13):
-        angle = np.radians(90 - hour * 30)
-        x_label, y_label = 1.1 * np.cos(angle), 1.1 * np.sin(angle)
-        ax.text(x_label, y_label, str(hour), ha='center', va='center', fontsize=8)
-        x1, y1 = 0.4 * np.cos(angle), 0.4 * np.sin(angle)
-        x2, y2 = 1.0 * np.cos(angle), 1.0 * np.sin(angle)
+        angle = np.radians(90 - hour * 30)  # Start from top (12 o'clock)
+        
+        # Add hour markers
+        x_label = 1.1 * np.cos(angle)
+        y_label = 1.1 * np.sin(angle)
+        ax.text(x_label, y_label, f"{hour}", ha='center', va='center', fontsize=8)
+        
+        # Draw the radial lines
+        x1, y1 = 0.4 * np.cos(angle), 0.4 * np.sin(angle)  # Start at inner circle (0.4)
+        x2, y2 = 1.0 * np.cos(angle), 1.0 * np.sin(angle)  # End at outer circle (1.0)
         ax.plot([x1, x2], [y1, y2], 'k-', linewidth=0.5)
     
+    # Set title and additional info (O.D. and O.S.)
     eye_abbr = "O.D." if title == "Right Eye" else "O.S."
-    ax.set_title(f"{eye_abbr}\nVA: {va} | IOP: {iop} mmHg")
+    ax.set_title(f"{eye_abbr}\nVA: {va} | IOP: {iop} mmHg", fontsize=8, pad=10)
+    
+    # Add date and patient info at bottom (matching the image)
+    current_date = "2025-03-03"  # Fixed date as per image
+    ax.text(0, -1.3, f"Date: {current_date}", fontsize=6, ha='center')
+    ax.text(0, -1.45, f"Number: {st.session_state.app_state.get('current_patient', '')}", fontsize=6, ha='center')
+    ax.text(0, -1.6, f"Name: {st.session_state.app_state.get('patient_name', '')}", fontsize=6, ha='center')
+    
+    # Set plot limits and remove axes
     ax.set_xlim(-1.5, 1.5)
     ax.set_ylim(-1.5, 1.5)
     ax.axis('off')
